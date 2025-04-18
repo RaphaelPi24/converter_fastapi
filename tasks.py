@@ -2,7 +2,7 @@ import asyncio
 import uuid
 from typing import Dict
 
-queue = asyncio.Queue
+queue = asyncio.Queue()
 active_tasks: Dict[str, Dict] = {}
 
 
@@ -16,26 +16,29 @@ async def add_task(client_id: str, task_data: dict):
     return task_id
 
 
+async def run_task(target_format, convert_file):
+    asyncio.create_task(
+        convert_file(target_format))
+
+    #asyncio.create_task(simulate_conversion(task_id, file.filename, target_format))
+
 async def get_next_task():
     return await queue.get()  # и сразу удаляет из очереди
 
 
-async def process_tasks(one_task):
+async def process_tasks(processor):
     while True:
         task_data = await get_next_task()
         task_id = task_data['task_id']
 
         try:
             active_tasks[task_id]['status'] = 'processing'
-            await one_task()
-
+            await processor(task_data)
             active_tasks[task_id]['status'] = 'completed'
+        except Exception as e:
+            active_tasks[task_id]['status'] = 'error'
         finally:
             queue.task_done()
-
-
-# async def process_one_task():
-#     await asyncio.sleep(4)
 
 
 async def get_all_active_tasks():
@@ -46,7 +49,5 @@ async def remove_task(task_id: str):
     if task_id not in active_tasks:
         return {'error': 'task not found'}
 
-    if task_id in active_tasks:
-        del active_tasks[task_id]
-
+    del active_tasks[task_id]
     return {'status': 'deleted'}

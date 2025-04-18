@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Converter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .converter-form {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .task {
+            border: 1px solid #eee;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        .progress-container {
+            width: 100%;
+            background-color: #f1f1f1;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .progress-bar {
+            height: 20px;
+            background-color: #4CAF50;
+            border-radius: 5px;
+            width: 0%;
+            transition: width 0.3s;
+            text-align: center;
+            line-height: 20px;
+            color: white;
+        }
+        select, input, button {
+            padding: 8px;
+            margin: 5px 0;
+            width: 100%;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>File Converter</h1>
+
+    <div class="converter-form">
+        <h2>Convert File</h2>
+    <form action="/upload" method="post" enctype="multipart/form-data">
+        <input type="file" name="file">
+        <select name="target_format">
+            <option value="pdf">PDF</option>
+            <option value="png">PNG</option>
+            <option value="jpg">JPG</option>
+        </select>
+        <button type="submit">Upload</button>
+    </form>
+
+<!--        <form id="uploadForm">-->
+<!--            <input type="file" id="fileInput" required>-->
+<!--            <select id="formatSelect" required>-->
+<!--                <option value="">Select target format</option>-->
+<!--                <option value="PDF">To PDF</option>-->
+<!--                <option value="DOCX">To DOCX</option>-->
+<!--                <option value="JPG">To JPG</option>-->
+<!--                <option value="PNG">To PNG</option>-->
+<!--            </select>-->
+<!--            <button type="submit">Convert</button>-->
+<!--        </form>-->
+    </div>
+
+    <div id="tasksContainer">
+        <h2>Active Conversions</h2>
+        <!-- Tasks will appear here -->
+    </div>
+
+    <script>
+        const tasksContainer = document.getElementById('tasksContainer');
+        const uploadForm = document.getElementById('uploadForm');
+
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const fileInput = document.getElementById('fileInput');
+            const formatSelect = document.getElementById('formatSelect');
+
+            if (!fileInput.files.length || !formatSelect.value) {
+                alert('Please select a file and target format');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('target_format', formatSelect.value);
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                createTaskElement(data.task_id, fileInput.files[0].name, formatSelect.value);
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error uploading file');
+            }
+        });
+
+        function createTaskElement(taskId, filename, targetFormat) {
+            const taskDiv = document.createElement('div');
+            taskDiv.className = 'task';
+            taskDiv.id = `task-${taskId}`;
+
+            taskDiv.innerHTML = `
+                <h3>${filename} → ${targetFormat}</h3>
+                <p>Status: <span class="status">processing</span></p>
+                <div class="progress-container">
+                    <div class="progress-bar" id="progress-${taskId}">0%</div>
+                </div>
+                <a href="#" id="download-${taskId}" style="display:none;">Download</a>
+            `;
+
+            tasksContainer.prepend(taskDiv);
+            setupWebSocket(taskId);
+        }
+
+        function setupWebSocket(taskId) {
+            const ws = new WebSocket(`ws://${window.location.host}/ws/${taskId}`);
+            const progressBar = document.getElementById(`progress-${taskId}`);
+            const statusSpan = document.querySelector(`#task-${taskId} .status`);
+            const downloadLink = document.getElementById(`download-${taskId}`);
+
+            ws.onmessage = (event) => {
+                const progress = event.data;
+                progressBar.style.width = `${progress}%`;
+                progressBar.textContent = `${progress}%`;
+
+                if (progress === '100') {
+                    statusSpan.textContent = 'completed';
+                    downloadLink.style.display = 'block';
+                    downloadLink.href = `/download/${taskId}`;
+                    downloadLink.download = true;
+                }
+            };
+
+            ws.onclose = () => {
+                console.log(`WebSocket closed for task ${taskId}`);
+            };
+        }
+    </script>
+</body>
+</html>
