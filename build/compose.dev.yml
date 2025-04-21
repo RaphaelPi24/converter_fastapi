@@ -1,0 +1,20 @@
+services:
+  fastapi:
+    develop:
+      watch:
+        - action: sync+restart
+          path: ../src
+          target: /app
+          ignore:
+            - ../src/converted_files
+            - ../src/uploaded_files
+            - .env
+            - requirements.txt
+        - action: rebuild
+          path: ../src/requirements.txt
+#  db:
+#    ports:
+#      - "5433:5432" # хост контейнер
+  redis:
+    ports:
+      - "6379:6379"

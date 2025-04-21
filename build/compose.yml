@@ -1,0 +1,57 @@
+name: converter_fa
+
+services:
+#  nginx:
+#    image: nginx:latest
+#    restart: always
+#    ports:
+#      - "80:80"
+#    volumes:
+#      - ../src/static:/app/static
+#      - ./nginx:/etc/nginx/conf.d
+#    depends_on:
+#      - flask
+
+
+
+  fastapi:
+    build:
+      context: ..
+      dockerfile: build/backend/Dockerfile
+    depends_on:
+#      - db
+      - redis
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../src/converted_files:/app/converted_files
+      - ../src/uploaded_files:/app/uploaded_files
+
+
+#  db:
+#    image: postgres:15
+#    env_file: .env.production
+#    volumes:
+#      - postgres_data:/var/lib/postgresql/data
+
+
+  worker:
+    build:
+      context: ..
+      dockerfile: build/Dockerfile
+    depends_on:
+      - redis
+    command: rq worker --url redis://redis:6379
+    volumes:
+      - ../src/converted_files:/app/converted_files
+      - ../src/uploaded_files:/app/uploaded_files
+
+  redis:
+    image: redis:latest
+    volumes:
+      - redis_data:/data
+
+
+volumes:
+  postgres_data:
+  redis_data:
