@@ -11,8 +11,7 @@ from rq import Queue
 from starlette.responses import HTMLResponse, JSONResponse
 from starlette.websockets import WebSocket
 
-from converter import CONVERTED_FOLDER, convert_file, \
-    get_converted_filename
+from src.convert_code.utils import get_converted_filename, convert_file, CONVERTED_FOLDER
 from fake_progress import async_progress_bar, from_number_to_sec
 
 redis_conn = Redis(host='redis', port=6379)
@@ -63,7 +62,7 @@ async def websocket_progress(websocket: WebSocket):
     await websocket.accept()
     try:
         data = await websocket.receive_text()  # длина
-        print(data)
+
         try:
             duration = from_number_to_sec(int(data))
         except ValueError:
