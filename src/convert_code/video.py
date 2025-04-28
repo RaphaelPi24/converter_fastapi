@@ -1,18 +1,43 @@
 import subprocess
 from pathlib import Path
 
-
-def convert(path, destination_format):
-    params = {
-        'mp4': {
-            'avi': ['-c:v', 'libvpx', ...],
-            'webm': {},
-        }
+# Маппинг форматов: источник ➔ целевой ➔ параметры ffmpeg
+conversion_params = {
+    'mp4': {
+        'avi': ['-c:v', 'mpeg4'],
+        'webm': ['-c:v', 'libvpx', '-b:v', '1M', '-c:a', 'libvorbis'],
+        'mov': ['-c:v', 'libx264', '-c:a', 'aac'],
+    },
+    'avi': {
+        'mp4': ['-c:v', 'libx264', '-c:a', 'aac'],
+    },
+    'webm': {
+        'mp4': ['-c:v', 'libx264', '-c:a', 'aac'],
+    },
+    'mov': {
+        'mp4': ['-c:v', 'libx264', '-c:a', 'aac'],
     }
-    source_format = path.suffix
-    _params = params[source_format][destination_format]
-    output_path = path.with_suffix(f"{destination_format}")
-    subprocess.run(["ffmpeg", "-i", str(path), *_params], check=True)
+}
+
+
+def convert(input_path: Path, destination_format: str) -> Path:
+    source_format = input_path.suffix.lstrip('.').lower()
+    destination_format = destination_format.lower()
+
+    if source_format not in conversion_params:
+        raise ValueError(f"Конвертация из {source_format} не поддерживается.")
+    if destination_format not in conversion_params[source_format]:
+        raise ValueError(f"Конвертация из {source_format} в {destination_format} не поддерживается.")
+
+    params = conversion_params[source_format][destination_format]
+    if destination_format is None:
+        output_path = input_path.with_suffix(f".{destination_format}")
+
+    command = ["ffmpeg", "-i", str(input_path)] + params + [str(output_path)]
+
+    subprocess.run(command, check=True)
+
+    return output_path
 
 
 def mp4_to_avi(input_path: Path, output_path: Path):
