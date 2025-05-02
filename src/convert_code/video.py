@@ -20,7 +20,7 @@ conversion_params = {
 }
 
 
-def convert(input_path: Path, destination_format: str, output_path: Path|None) -> Path:
+def convert(input_path: Path, destination_format: str, output_path: Path | None) -> Path:
     source_format = input_path.suffix.lstrip('.').lower()
     destination_format = destination_format.lower()
 
@@ -41,24 +41,29 @@ def convert(input_path: Path, destination_format: str, output_path: Path|None) -
 
     return output_path
 
+
 def mp4_to_avi(input_path: Path, output_path: Path):
     convert(input_path, destination_format="avi", output_path=output_path)
+
 
 def avi_to_mp4(input_path: Path, output_path: Path):
     convert(input_path, destination_format="mp4", output_path=output_path)
 
+
 def mp4_to_webm(input_path: Path, output_path: Path):
     convert(input_path, destination_format="webm", output_path=output_path)
+
 
 def webm_to_mp4(input_path: Path, output_path: Path):
     convert(input_path, destination_format="mp4", output_path=output_path)
 
+
 def mov_to_mp4(input_path: Path, output_path: Path):
     convert(input_path, destination_format="mp4", output_path=output_path)
 
+
 def mp4_to_mov(input_path: Path, output_path: Path):
     convert(input_path, destination_format="mov", output_path=output_path)
-
 
 
 """"
