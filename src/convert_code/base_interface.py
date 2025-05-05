@@ -1,3 +1,4 @@
+import subprocess
 from pathlib import Path
 
 from src.convert_code.archive import TarGzArchiver, ZipArchiver
@@ -42,12 +43,14 @@ class BaseInterface:
             raise ValueError("Input data not specified")
         if not isinstance(input_data, Path):
             raise ValueError("Input data must be a Path object")
+        return input_data
 
     def check_output_path(self, output_path: Path):
         if output_path is None:
             raise ValueError("Output path not specified")
         if not isinstance(output_path, Path):
             raise ValueError("Output path must be a Path object")
+        return output_path
 
 
 class TextInterface(BaseInterface):
@@ -80,10 +83,6 @@ class TextInterface(BaseInterface):
         converter_func(self.input_data, self.output_path)
 
 
-import subprocess
-from pathlib import Path
-
-
 class VideoInterface(BaseInterface):
     conversion_params = {
         'mp4': {
@@ -108,8 +107,7 @@ class VideoInterface(BaseInterface):
 
     def run(self):
         params = self.conversion_params[self.source_format][self.target_format]
-        output_path = self.output_path.with_suffix(f".{self.target_format}")
-        command = ["ffmpeg", "-i", str(self.input_data)] + params + [str(output_path)]
+        command = ["ffmpeg", "-i", str(self.input_data)] + params + [str(self.output_path)]
         subprocess.run(command, check=True)
 
 
@@ -127,31 +125,38 @@ class ArchiveInterface(BaseInterface):
     all_target_format = archiver_classes.keys()
 
     def __init__(self, source_format: str | None, target_format: str | None, input_data: Path, output_path: Path):
-        # Автоопределение, если передано None
+        # в одном должен быть нужный формат, в другом всегда None - означает папка
         if source_format is None:
             source_format = self._resolve_suffix(input_data)
-            self.mode = 'extract'
+            self.mode = 'archive'
         if target_format is None:
             target_format = self._resolve_suffix(output_path)
-            self.mode = 'archive'
-
+            self.mode = 'extract'
         super().__init__(source_format, target_format, input_data, output_path)
 
     def check_source_format(self, source_format: str):
-        return source_format.lower()
+        if source_format is not None:
+            return source_format.lower()
 
     def check_target_format(self, target_format: str):
-        return target_format.lower()
+        if target_format is not None:
+            return target_format.lower()
 
     def correct_func_convertion(self):
-        if self.source_format not in self.all_source_format or self.target_format not in self.all_target_format:
-            raise ValueError(f"Конвертация из {self.source_format} в {self.target_format} не поддерживается.")
-        elif self.source_format is None and self.target_format is None:
-            raise ValueError(f'Формат вообще не задан {self.source_format}, {self.target_format}')
+        if self.source_format is not None and self.source_format not in self.all_source_format:
+            raise ValueError(f"Неподдерживаемый формат: {self.source_format}")
+        if self.target_format is not None and self.target_format not in self.all_target_format:
+            raise ValueError(f"Неподдерживаемый формат: {self.target_format}")
+        if self.source_format is None and self.target_format is None:
+            raise ValueError(f"Формат не задан: {self.source_format}, {self.target_format}")
 
     def run(self):
-        suffix = self._resolve_suffix(self.input_data if self.mode == 'extract' else self.output_path)
-        archiver_class = self.archiver_classes.get(suffix)
+        suffix = self.source_format if self.mode == 'extract' else self.target_format
+
+        if suffix not in self.archiver_classes:
+            raise ValueError(f"Неподдерживаемый формат архива: {suffix}")
+
+        archiver_class = self.archiver_classes[suffix]
         archiver = archiver_class(self.input_data, self.output_path)
 
         try:
@@ -163,11 +168,14 @@ class ArchiveInterface(BaseInterface):
         except Exception as e:
             raise DecompressingError(f"Ошибка при архивации/распаковке: {e}")
 
-    def _resolve_suffix(path: Path) -> str:
+    def _resolve_suffix(self, path: Path) -> str | None:
         name = path.name
         if name.endswith(".tar.gz"):
             return ".tar.gz"
-        return path.suffix
+        suffix = path.suffix
+        if suffix in self.all_source_format:
+            return suffix
+        return None  # <--- если не подходит, пусть возвращает None
 
 
 class ImageInterface(BaseInterface):
