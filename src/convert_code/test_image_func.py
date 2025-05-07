@@ -29,7 +29,7 @@ def skip_if_missing(path: Path):
 
 
 def test_jpg_to_webp(cleanup_file):
-    input_file = INPUT_DIR / "6543.jpg"
+    input_file = INPUT_DIR / "example.jpg"
     output_file = OUTPUT_DIR / "test_jpg_to_webp.webp"
     skip_if_missing(input_file)
     cleanup_file(output_file)
@@ -39,7 +39,7 @@ def test_jpg_to_webp(cleanup_file):
 
 
 def test_webp_to_jpg(cleanup_file):
-    input_file = INPUT_DIR / "511.webp"
+    input_file = INPUT_DIR / "example.webp"
     output_file = OUTPUT_DIR / "test_webp_to_jpg.jpg"
     skip_if_missing(input_file)
     cleanup_file(output_file)
@@ -49,7 +49,7 @@ def test_webp_to_jpg(cleanup_file):
 
 
 def test_webp_to_png(cleanup_file):
-    input_file = INPUT_DIR / "511.webp"
+    input_file = INPUT_DIR / "example.webp"
     output_file = OUTPUT_DIR / "test_webp_to_png.png"
     skip_if_missing(input_file)
     cleanup_file(output_file)
@@ -59,7 +59,7 @@ def test_webp_to_png(cleanup_file):
 
 
 def test_svg_to_png(cleanup_file):
-    input_file = INPUT_DIR / "098.svg"
+    input_file = INPUT_DIR / "example.svg"
     output_file = OUTPUT_DIR / "test_svg_to_png.png"
     skip_if_missing(input_file)
     cleanup_file(output_file)
@@ -69,7 +69,7 @@ def test_svg_to_png(cleanup_file):
 
 
 def test_png_to_svg(cleanup_file):
-    input_file = INPUT_DIR / "Без названия.png"
+    input_file = INPUT_DIR / "example.png"
     output_file = OUTPUT_DIR / "test_png_to_svg.svg"
     skip_if_missing(input_file)
     cleanup_file(output_file)

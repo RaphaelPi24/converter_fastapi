@@ -1,8 +1,8 @@
-import shutil
 from pathlib import Path
+
 import pytest
 
-from src.convert_code.base_interface import ArchiveInterface
+from src.convert_code.interface import ArchiveInterface
 
 FILES_DIR = Path(__file__).resolve().parents[2] / "src" / "convert_code"
 INPUT_DIR = FILES_DIR / "files before conversion"
@@ -27,7 +27,7 @@ def test_zip_archive_and_extract(prepare_folder):
 
     # Архивация
     archiver = ArchiveInterface(
-        source_format=None,  # => это архивирование
+        source_format="folder",  # => это архивирование
         target_format=".zip",
         input_data=prepare_folder,
         output_path=archive_path
@@ -38,7 +38,7 @@ def test_zip_archive_and_extract(prepare_folder):
     # Распаковка
     extractor = ArchiveInterface(
         source_format=".zip",
-        target_format=None,
+        target_format="folder",
         input_data=archive_path,
         output_path=extract_path
     )
@@ -55,7 +55,7 @@ def test_tar_gz_archive_and_extract(prepare_folder):
 
     # Архивация
     archiver = ArchiveInterface(
-        source_format=None,
+        source_format="folder",
         target_format=".tar.gz",
         input_data=prepare_folder,
         output_path=archive_path
@@ -66,7 +66,7 @@ def test_tar_gz_archive_and_extract(prepare_folder):
     # Распаковка
     extractor = ArchiveInterface(
         source_format=".tar.gz",
-        target_format=None,
+        target_format="folder",
         input_data=archive_path,
         output_path=extract_path
     )
@@ -80,8 +80,8 @@ def test_invalid_format_raises_error():
     dummy_path = Path("dummy")  # допустим, несуществующий путь
     with pytest.raises(ValueError, match=r"Неподдерживаемый формат"):
         ArchiveInterface(
-            source_format=".rar",   # <- заведомо неподдерживаемый формат
-            target_format=None,
+            source_format=".rar",  # <- заведомо неподдерживаемый формат
+            target_format="folder",
             input_data=dummy_path,
             output_path=dummy_path
         )

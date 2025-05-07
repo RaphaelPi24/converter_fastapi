@@ -1,5 +1,4 @@
 from pathlib import Path
-
 import pytest
 
 from src.convert_code.text import (
@@ -18,7 +17,6 @@ def cleanup_file():
     def _clean(path: Path):
         if path.exists():
             path.unlink()
-
     return _clean
 
 
@@ -33,8 +31,7 @@ def test_txt_to_csv(cleanup_file):
     skip_if_missing(input_file)
     cleanup_file(output_file)
 
-    content = input_file.read_text(encoding="utf-8")
-    txt_to_csv(content, output_file)
+    txt_to_csv(input_file, output_file)
     assert output_file.exists()
 
 
@@ -44,8 +41,7 @@ def test_txt_to_json(cleanup_file):
     skip_if_missing(input_file)
     cleanup_file(output_file)
 
-    content = input_file.read_text(encoding="utf-8")
-    txt_to_json(content, output_file)
+    txt_to_json(input_file, output_file)
     assert output_file.exists()
 
 
@@ -65,8 +61,7 @@ def test_json_to_txt(cleanup_file):
     skip_if_missing(input_file)
     cleanup_file(output_file)
 
-    content = input_file.read_text(encoding="utf-8")
-    json_to_txt(content, output_file)
+    json_to_txt(input_file, output_file)
     assert output_file.exists()
 
 
