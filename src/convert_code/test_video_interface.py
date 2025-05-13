@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from src.convert_code.interface import VideoInterface
+from convert_code.interface import VideoInterface
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 FILES_DIR = PROJECT_ROOT / "src" / "convert_code"

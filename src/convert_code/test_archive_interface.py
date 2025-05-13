@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from src.convert_code.interface import ArchiveInterface
+from convert_code.interface import ArchiveInterface
 
 FILES_DIR = Path(__file__).resolve().parents[2] / "src" / "convert_code"
 INPUT_DIR = FILES_DIR / "files before conversion"

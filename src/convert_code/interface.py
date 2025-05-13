@@ -1,12 +1,12 @@
 import subprocess
 from pathlib import Path
 
-from src.convert_code.archive import TarGzArchiver, ZipArchiver
-from src.convert_code.image import svg_to_png, webp_to_jpg, webp_to_png, png_to_svg, png_to_webp, jpg_to_svg, \
+from convert_code.archive import TarGzArchiver, ZipArchiver
+from convert_code.image import svg_to_png, webp_to_jpg, webp_to_png, png_to_svg, png_to_webp, jpg_to_svg, \
     jpg_to_webp
-from src.convert_code.text import docx_to_txt, pdf_to_txt, json_to_txt, csv_to_txt, txt_to_docx, txt_to_pdf, \
+from convert_code.text import docx_to_txt, pdf_to_txt, json_to_txt, csv_to_txt, txt_to_docx, txt_to_pdf, \
     txt_to_json, txt_to_csv
-from src.convert_code.validators import ConversionParams
+from convert_code.validators import ConversionParams
 
 
 class BaseInterface:
@@ -194,3 +194,10 @@ class UniversalInterface:
 
     def run(self) -> bool:
         return self.interface.run()
+
+    @classmethod
+    def get_all_supported_pairs(cls):
+        pairs = []
+        for iface in cls.INTERFACES:
+            pairs.extend(iface.all_format_pairs)
+        return pairs

@@ -1,7 +1,7 @@
 from pathlib import Path
 import pytest
 
-from src.convert_code.text import (
+from convert_code.text import (
     txt_to_csv, txt_to_json, txt_to_pdf, txt_to_docx,
     csv_to_txt, json_to_txt, pdf_to_txt, docx_to_txt
 )

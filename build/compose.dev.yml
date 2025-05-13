@@ -9,7 +9,7 @@ services:
             - ../src/converted_files
             - ../src/uploaded_files
             - .env
-            - requirements.txt
+            #- requirements.txt
         - action: rebuild
           path: ../src/requirements.txt
 #  db:
@@ -17,4 +17,4 @@ services:
 #      - "5433:5432" # хост контейнер
   redis:
     ports:
-      - "6379:6379"
+      - "6380:6379"

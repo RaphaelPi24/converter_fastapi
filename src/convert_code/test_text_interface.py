@@ -1,6 +1,6 @@
 import pytest
 from pathlib import Path
-from src.convert_code.interface import TextInterface
+from convert_code.interface import TextInterface
 
 TEST_FILES_DIR = Path(__file__).resolve().parents[2] / "src" / "convert_code" / "files before conversion"
 OUTPUT_DIR = Path(__file__).resolve().parents[2] / "src" / "convert_code" / "files after conversion"

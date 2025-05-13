@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from src.convert_code.image import (
+from convert_code.image import (
     jpg_to_webp, webp_to_png, webp_to_jpg,
     svg_to_png, png_to_svg
 )
