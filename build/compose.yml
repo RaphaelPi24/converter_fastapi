@@ -18,6 +18,8 @@ services:
     build:
       context: ..
       dockerfile: build/backend/Dockerfile
+    environment:
+      - PYTHONPATH=/app
     depends_on:
 #      - db
       - redis
@@ -38,7 +40,7 @@ services:
   worker:
     build:
       context: ..
-      dockerfile: build/Dockerfile
+      dockerfile: build/backend/Dockerfile
     depends_on:
       - redis
     command: rq worker --url redis://redis:6379
