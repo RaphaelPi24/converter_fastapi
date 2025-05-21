@@ -1,4 +1,36 @@
 from pathlib import Path
+
+from convert_code.interface import UniversalInterface
+
+
+def get_converted_filename(original_filename: str, target_format: str) -> str:
+    """
+    Возвращает имя нового файла после конвертации.
+    Пример: ("report.txt", "pdf") → "report_converted.pdf"
+    """
+    source, target = target_format.split("_to_")
+    stem = Path(original_filename).stem
+    return f"{stem}_converted.{target}"
+
+
+def convert_file(input_path: str, filename: str, conversion_type: str) -> None:
+    """
+    Универсальная точка входа для RQ worker. Вызывает нужный интерфейс.
+    :param input_path: путь до входного файла
+    :param filename: имя входного файла
+    :param conversion_type: строка вида 'txt_to_pdf'
+    """
+    source, target = conversion_type.split("_to_")
+    input_path = Path(input_path)
+    output_dir = Path(__file__).resolve().parent.parent / "converted_files"
+    output_dir.mkdir(exist_ok=True)
+    output_filename = f"{input_path.stem}_converted.{target}"
+    output_path = output_dir / output_filename
+
+    interface = UniversalInterface(source_format=source, target_format=target, input_data=input_path,
+                                   output_path=output_path)
+    interface.run()
+
 #
 # from convert_code.text import txt_to_csv, txt_to_json, csv_to_txt, json_to_txt
 #
@@ -55,10 +87,3 @@ from pathlib import Path
 #     "json_to_txt": ".txt",
 # }
 #
-def get_converted_filename(original_filename: str, target_format: str) -> str:
-    """
-    Возвращает имя нового файла после конвертации.
-    Пример: ("report.txt", "pdf") → "report_converted.pdf"
-    """
-    stem = Path(original_filename).stem
-    return f"{stem}_converted.{target_format}"
