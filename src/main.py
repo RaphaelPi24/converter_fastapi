@@ -1,19 +1,24 @@
 import shutil
+from datetime import datetime, timezone
 from pathlib import Path
-
+from rq_scheduler import Scheduler
 from fastapi import FastAPI, Request, Form, UploadFile, File
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
-from starlette.websockets import WebSocket
 from redis import Redis
 from rq import Queue
+from starlette.websockets import WebSocket
 
 from convert_code.interface import UniversalInterface
-from convert_code.utils import get_converted_filename
+from convert_code.utils import get_converted_filename, convert_file
 from fake_progress import async_progress_bar, from_number_to_sec
+from file_cleanup import cleanup_files
+from middleware import LimitUploadSizeMiddleware
 
 # --- Инициализация ---
 app = FastAPI()
+app.add_middleware(LimitUploadSizeMiddleware) # ограничение на загрузку файлов
+MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10 MB
 
 BASE_DIR = Path(__file__).resolve().parent
 STATIC_DIR = BASE_DIR / "static"
@@ -28,6 +33,18 @@ TEMPLATES = Jinja2Templates(directory=STATIC_DIR)
 # --- Redis + RQ ---
 redis_conn = Redis(host="redis", port=6379)
 q = Queue(connection=redis_conn)
+
+
+scheduler = Scheduler(connection=redis_conn)
+
+# Планировать запуск каждые 15 минут
+scheduler.schedule(
+    scheduled_time=datetime.now(timezone.utc),
+    func=cleanup_files,
+    args=[[Path("../uploaded_files"), Path("../converted_files")]],
+    interval=310,  # каждые 900 секунд (15 минут)
+    repeat=None # повтор бесконечно, а не определенное количество раз
+)
 
 # --- Роуты ---
 @app.get("/", response_class=HTMLResponse)
@@ -46,7 +63,7 @@ async def upload_file(file: UploadFile = File(...), conversionType: str = Form(.
         shutil.copyfileobj(file.file, buffer)
 
     converted_filename = get_converted_filename(file.filename, conversionType)
-    job = q.enqueue("convert_code.utils.convert_file", str(file_path), file.filename, conversionType)
+    job = q.enqueue(convert_file, str(file_path), file.filename, conversionType)
 
     return {
         "filename": file.filename,

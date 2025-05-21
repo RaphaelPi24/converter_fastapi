@@ -78,13 +78,23 @@
       progressBar.textContent = "0%";
       downloadLink.style.display = "none";
 
-      const response = await fetch("/upload/", {
+            const response = await fetch("/upload/", {
         method: "POST",
         body: formData,
       });
 
+      if (!response.ok) {
+        if (response.status === 413) {
+          status.textContent = "❌ Файл слишком большой. Пожалуйста, выберите меньший файл.";
+        } else {
+          status.textContent = `❌ Ошибка загрузки: ${response.status}`;
+        }
+        return; // Не запускаем WebSocket!
+      }
+
       const result = await response.json();
       const convertedFilename = result.converted_filename;
+
 
       const ws = new WebSocket(`ws://${location.host}/ws/progress`);
       ws.onopen = () => ws.send(String(file.size));
