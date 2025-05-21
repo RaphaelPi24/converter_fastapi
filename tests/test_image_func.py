@@ -2,15 +2,11 @@ from pathlib import Path
 
 import pytest
 
-from convert_code.image import (
+from convert_code.funcs.image import (
     jpg_to_webp, webp_to_png, webp_to_jpg,
     svg_to_png, png_to_svg
 )
-
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-FILES_DIR = PROJECT_ROOT / "src" / "convert_code"
-INPUT_DIR = FILES_DIR / "files before conversion"
-OUTPUT_DIR = FILES_DIR / "files after conversion"
+from path import INPUT_DIR, OUTPUT_DIR
 
 
 # Фикстура очистки выходного файла

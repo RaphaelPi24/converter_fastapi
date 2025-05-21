@@ -3,11 +3,7 @@ from pathlib import Path
 import pytest
 
 from convert_code.interface import VideoInterface
-
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-FILES_DIR = PROJECT_ROOT / "src" / "convert_code"
-INPUT_DIR = FILES_DIR / "files before conversion"
-OUTPUT_DIR = FILES_DIR / "files after conversion"
+from path import INPUT_DIR, OUTPUT_DIR
 
 
 @pytest.fixture

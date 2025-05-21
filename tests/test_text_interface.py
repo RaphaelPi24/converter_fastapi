@@ -1,17 +1,16 @@
 import pytest
-from pathlib import Path
+
 from convert_code.interface import TextInterface
 
-TEST_FILES_DIR = Path(__file__).resolve().parents[2] / "src" / "convert_code" / "files before conversion"
-OUTPUT_DIR = Path(__file__).resolve().parents[2] / "src" / "convert_code" / "files after conversion"
-
 conversion_format = TextInterface.conversion_format
+from path import INPUT_DIR, OUTPUT_DIR
+
 
 @pytest.mark.parametrize("src_fmt,tgt_fmt", [
     (src, tgt) for src, targets in conversion_format.items() for tgt in targets.keys()
 ])
 def test_text_conversion(src_fmt, tgt_fmt):
-    input_file = TEST_FILES_DIR / f"example.{src_fmt}"
+    input_file = INPUT_DIR / f"example.{src_fmt}"
     output_file = OUTPUT_DIR / f"{src_fmt}_{tgt_fmt}.{tgt_fmt}"
 
     interface = TextInterface(

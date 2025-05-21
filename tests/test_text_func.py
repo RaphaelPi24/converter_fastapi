@@ -1,15 +1,12 @@
 from pathlib import Path
+
 import pytest
 
-from convert_code.text import (
+from convert_code.funcs.text import (
     txt_to_csv, txt_to_json, txt_to_pdf, txt_to_docx,
     csv_to_txt, json_to_txt, pdf_to_txt, docx_to_txt
 )
-
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-FILES_DIR = PROJECT_ROOT / "src" / "convert_code"
-INPUT_DIR = FILES_DIR / "files before conversion"
-OUTPUT_DIR = FILES_DIR / "files after conversion"
+from path import INPUT_DIR, OUTPUT_DIR
 
 
 @pytest.fixture
@@ -17,6 +14,7 @@ def cleanup_file():
     def _clean(path: Path):
         if path.exists():
             path.unlink()
+
     return _clean
 
 
