@@ -1,14 +1,14 @@
 import shutil
-from datetime import datetime, timezone
-from pathlib import Path
-from rq_scheduler import Scheduler
-from fastapi import FastAPI, Request, Form, UploadFile, File
+
+from fastapi import FastAPI, Form, UploadFile, File
+from fastapi import Request, Depends
 from fastapi.responses import FileResponse, HTMLResponse
-from fastapi.templating import Jinja2Templates
-from redis import Redis
-from rq import Queue
+from rq import Repeat
 from starlette.websockets import WebSocket
 
+from auth.auth_utils import get_current_user
+from auth.routers import router as auth_router
+from config import UPLOAD_DIR, CONVERTED_DIR, TEMPLATES, q
 from convert_code.interface import UniversalInterface
 from convert_code.utils import get_converted_filename, convert_file
 from fake_progress import async_progress_bar, from_number_to_sec
@@ -17,53 +17,30 @@ from middleware import LimitUploadSizeMiddleware
 
 # --- Инициализация ---
 app = FastAPI()
-app.add_middleware(LimitUploadSizeMiddleware) # ограничение на загрузку файлов
-MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10 MB
+app.add_middleware(LimitUploadSizeMiddleware)
+app.include_router(auth_router)
 
-BASE_DIR = Path(__file__).resolve().parent
-STATIC_DIR = BASE_DIR / "static"
-UPLOAD_DIR = BASE_DIR / "uploaded_files"
-CONVERTED_DIR = BASE_DIR / "converted_files"
-
-UPLOAD_DIR.mkdir(exist_ok=True)
-CONVERTED_DIR.mkdir(exist_ok=True)
-
-TEMPLATES = Jinja2Templates(directory=STATIC_DIR)
-
-# --- Redis + RQ ---
-redis_conn = Redis(host="redis", port=6379)
-q = Queue(connection=redis_conn)
-
-
-scheduler = Scheduler(connection=redis_conn)
-
-# Планировать запуск каждые 15 минут
-scheduler.schedule(
-    scheduled_time=datetime.now(timezone.utc),
-    func=cleanup_files,
-    args=[[Path("../uploaded_files"), Path("../converted_files")]],
-    interval=310,  # каждые 900 секунд (15 минут)
-    repeat=None # повтор бесконечно, а не определенное количество раз
-)
-
+job = q.enqueue(cleanup_files, repeat=Repeat(times=100_000, interval=900))
 # --- Роуты ---
+
 @app.get("/", response_class=HTMLResponse)
-async def form(request: Request):
+async def form(request: Request, current_user: str = Depends(get_current_user)):
     format_pairs = UniversalInterface.get_all_supported_pairs()
     return TEMPLATES.TemplateResponse("index.html", {
         "request": request,
-        "format_pairs": format_pairs
+        "format_pairs": format_pairs,
+        "current_user": current_user  # имя юзера из токена
     })
 
 
 @app.post("/upload/")
-async def upload_file(file: UploadFile = File(...), conversionType: str = Form(...)):
+async def upload_file(file: UploadFile = File(...), conversion_type: str = Form(...)):
     file_path = UPLOAD_DIR / file.filename
     with file_path.open("wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    converted_filename = get_converted_filename(file.filename, conversionType)
-    job = q.enqueue(convert_file, str(file_path), file.filename, conversionType)
+    converted_filename = get_converted_filename(file.filename, conversion_type)
+    job = q.enqueue(convert_file, str(file_path), file.filename, conversion_type)
 
     return {
         "filename": file.filename,
