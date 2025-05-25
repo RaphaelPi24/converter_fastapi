@@ -1,18 +1,9 @@
-FROM python:3.12-slim
+FROM python:3.12
 
-
-#RUN apt-get update && apt-get install -y \
-#    libpq-dev \
-#    libcairo2 \
-#    libcairo2-dev \
-#    libpango-1.0-0 \
-#    libpangocairo-1.0-0 \
-#    libgdk-pixbuf2.0-0 \
-#    libffi-dev \
-#    && apt-get clean && rm -rf /var/lib/apt/lists/* \
-RUN apt-get update && apt-get install -y \
-    libcairo2-dev pkg-config python3-dev \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get -y upgrade \
+    && apt-get install -y \
+    libcairo2-dev pkg-config python3-dev ffmpeg
+    #&& apt-get clean && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
@@ -22,5 +13,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY --chmod=775 build/backend/entrypoint.dev.sh /entrypoint.sh
 COPY ./src .
 COPY build/.env.production .env
+COPY ./tests /app/tests
+
 EXPOSE 8000
 CMD ["/entrypoint.sh"]

@@ -6,15 +6,15 @@ services:
           path: ../src
           target: /app
           ignore:
-            - ../src/converted_files
-            - ../src/uploaded_files
+            - ../converted_files
+            - ../uploaded_files
             - .env
             #- requirements.txt
         - action: rebuild
           path: ../src/requirements.txt
-#  db:
-#    ports:
-#      - "5433:5432" # хост контейнер
+  converter_db:
+    ports:
+      - "5433:5432" # хост контейнер
   redis:
     ports:
       - "6380:6379"
