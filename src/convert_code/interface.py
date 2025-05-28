@@ -92,24 +92,13 @@ class ArchiveInterface(BaseInterface):
     }
     class_func = ArchiveFunction
 
-    def check_tar_gz(self, source_format, target_format):
-        if 'tar.gz' in source_format:
-            source_format = 'tar_gz'
-        if 'tar.gz' in target_format:
-            target_format = 'tar_gz'
-        return source_format, target_format
-
+    @staticmethod
+    def normalize_format(format: str):
+        return format.replace('tar.gz', 'tar_gz')
 
     def convert(self, source_format: str, target_format: str, input_path: Path, output_path: Path):
-        source_format, target_format = self.check_tar_gz(source_format, target_format)
-        if source_format not in self.conversion_formats or target_format not in self.conversion_formats[source_format]:
-            raise ValueError(f'Unknown format: {source_format} -> {target_format}')
-        method_name = f'{source_format}_to_{target_format}'
-        method = getattr(self.class_func, method_name, None)
-        if not method:
-            raise AttributeError(
-                f'В словаре форматы для конвертирования есть, а >{method_name}< такого нет в {self.class_func.__name__}')
-        return method(input_path, output_path)
+        source_format, target_format = self.normalize_format(source_format), self.normalize_format(target_format)
+        return super().convert(source_format, target_format, input_path, output_path)
 
 
 class UniversalInterface:
