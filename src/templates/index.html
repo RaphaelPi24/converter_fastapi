@@ -41,12 +41,11 @@
     <p><a href="/register">Зарегистрироваться</a></p>
     {% endif %}
 
-
     <h2>Загрузите файл</h2>
-    <form id="uploadForm" enctype="multipart/form-data" method="post">
+    <form id="uploadForm" enctype="multipart/form-data">
         <input id="fileInput" name="file" type="file" required>
-        <label for="conversionType">Тип конвертации:</label>
-        <select id="conversionType" name="conversionType" required>
+        <label for="conversion_type">Тип конвертации:</label>
+        <select id="conversion_type" name="conversion_type" required>
             {% for pair in format_pairs %}
             <option value="{{ pair[0] }}_to_{{ pair[1] }}">{{ pair[0].upper() }} → {{ pair[1].upper() }}</option>
             {% endfor %}
@@ -69,11 +68,20 @@
         const status = document.getElementById("status");
         const downloadLink = document.getElementById("downloadLink");
 
+        async function waitForFile(url, attempts = 25, delay = 1500) {
+            for (let i = 0; i < attempts; i++) {
+                const response = await fetch(url, { method: "HEAD" });
+                if (response.ok) return true;
+                await new Promise(res => setTimeout(res, delay));
+            }
+            return false;
+        }
+
         form.onsubmit = async (e) => {
             e.preventDefault();
 
             const file = fileInput.files[0];
-            const conversionType = document.getElementById("conversionType").value;
+            const conversionType = document.getElementById("conversion_type").value;
 
             if (!file || !conversionType) {
                 status.textContent = "❗ Выберите файл и тип конвертации.";
@@ -82,7 +90,7 @@
 
             const formData = new FormData();
             formData.append("file", file);
-            formData.append("conversionType", conversionType);
+            formData.append("conversion_type", conversionType);
 
             status.textContent = "⏳ Загружаем...";
             progressBar.style.width = "0%";
@@ -100,24 +108,31 @@
                 } else {
                     status.textContent = `❌ Ошибка загрузки: ${response.status}`;
                 }
-                return; // Не запускаем WebSocket!
+                return;
             }
 
             const result = await response.json();
             const convertedFilename = result.converted_filename;
 
-
             const ws = new WebSocket(`ws://${location.host}/ws/progress`);
             ws.onopen = () => ws.send(String(file.size));
 
-            ws.onmessage = (event) => {
+            ws.onmessage = async (event) => {
                 const msg = event.data;
                 if (msg === "done") {
                     progressBar.style.width = "100%";
                     progressBar.textContent = "100%";
-                    status.textContent = "✅ Готово!";
-                    downloadLink.href = `/download/${convertedFilename}`;
-                    downloadLink.style.display = "block";
+                    status.textContent = "⏳ Проверка готовности файла...";
+
+                    const url = `/download/${convertedFilename}`;
+                    const exists = await waitForFile(url);
+                    if (exists) {
+                        status.textContent = "✅ Файл готов!";
+                        downloadLink.href = url;
+                        downloadLink.style.display = "block";
+                    } else {
+                        status.textContent = "⚠️ Файл ещё не готов, попробуйте чуть позже.";
+                    }
                     return;
                 }
 
