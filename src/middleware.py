@@ -3,10 +3,8 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
+from config import MAX_UPLOAD_SIZE
 
-# config.py
-MB = 1024 * 1024 # мегабайт
-MAX_UPLOAD_SIZE = 10 * MB  # 10 MB
 
 class LimitUploadSizeMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
