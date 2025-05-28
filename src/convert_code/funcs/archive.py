@@ -1,47 +1,26 @@
+import shutil
 import tarfile
 import zipfile
 from pathlib import Path
 
 
-class ArchiveError(Exception):
-    pass
+class ArchiveFunction:
 
+    @staticmethod
+    def folder_to_zip(input_path: Path, output_path: Path):
+        shutil.make_archive(str(output_path.with_suffix('')), 'zip', root_dir=input_path)
 
-class UnsupportedArchiveFormat(ArchiveError):
-    pass
+    @staticmethod
+    def folder_to_tar_gz(input_path: Path, output_path: Path):
+        with tarfile.open(output_path, "w:gz") as tar:
+            tar.add(input_path, arcname=".")
 
+    @staticmethod
+    def zip_to_folder(input_path: Path, output_path: Path):
+        with zipfile.ZipFile(input_path, 'r') as zip_ref:
+            zip_ref.extractall(output_path)
 
-
-
-class BaseArchiver:
-    def __init__(self, source: Path, destination: Path):
-        self.source = source
-        self.destination = destination
-
-    def archive(self):
-        raise NotImplementedError
-
-    def extract(self):
-        raise NotImplementedError
-
-
-
-class ZipArchiver(BaseArchiver):
-    def archive(self):
-        with zipfile.ZipFile(self.destination, 'w', zipfile.ZIP_DEFLATED) as zipf:
-            for file in self.source.rglob('*'):
-                zipf.write(file, file.relative_to(self.source))
-
-    def extract(self):
-        with zipfile.ZipFile(self.source, 'r') as zipf:
-            zipf.extractall(self.destination)
-
-
-class TarGzArchiver(BaseArchiver):
-    def archive(self):
-        with tarfile.open(self.destination, "w:gz") as tar:
-            tar.add(self.source, arcname=".")
-
-    def extract(self):
-        with tarfile.open(self.source, "r:gz") as tar:
-            tar.extractall(path=self.destination)
+    @staticmethod
+    def tar_gz_to_folder(input_path: Path, output_path: Path):
+        with tarfile.open(input_path, 'r:gz') as tar:
+            tar.extractall(path=output_path)
