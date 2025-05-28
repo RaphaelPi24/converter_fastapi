@@ -12,4 +12,4 @@ def get_current_user(request: Request) -> str:
     if not username:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
-    return username
+    return username.decode("utf-8")
