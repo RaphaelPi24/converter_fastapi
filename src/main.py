@@ -8,7 +8,7 @@ from starlette.websockets import WebSocket
 
 from auth.auth_utils import get_current_user
 from auth.routers import router as auth_router
-from config import UPLOAD_DIR, CONVERTED_DIR, TEMPLATES, q
+from config import UPLOAD_DIR, CONVERTED_DIR, TEMPLATES, queue_convertation, queue_file_cleanup
 from convert_code.interface import UniversalInterface
 from convert_code.utils import get_converted_filename, convert_file
 from fake_progress import async_progress_bar, from_number_to_sec
@@ -20,7 +20,12 @@ app = FastAPI()
 app.add_middleware(LimitUploadSizeMiddleware)
 app.include_router(auth_router)
 
-job = q.enqueue(cleanup_files, repeat=Repeat(times=100_000, interval=900))
+UPLOAD_DIR.mkdir(exist_ok=True)
+CONVERTED_DIR.mkdir(exist_ok=True)
+
+job = queue_file_cleanup.enqueue(cleanup_files, repeat=Repeat(times=100_000, interval=900))
+
+
 # --- Роуты ---
 
 @app.get("/", response_class=HTMLResponse)
@@ -38,13 +43,10 @@ async def upload_file(file: UploadFile = File(...), conversion_type: str = Form(
     file_path = UPLOAD_DIR / file.filename
     with file_path.open("wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
-
-    converted_filename = get_converted_filename(file.filename, conversion_type)
-    job = q.enqueue(convert_file, str(file_path), file.filename, conversion_type)
-
+    job = queue_convertation.enqueue(convert_file, str(file_path), file.filename, conversion_type)
     return {
         "filename": file.filename,
-        "converted_filename": converted_filename,
+        "converted_filename": get_converted_filename(file.filename, conversion_type),
         "message": "✅ Файл успешно загружен"
     }
 
@@ -55,7 +57,7 @@ async def websocket_progress(websocket: WebSocket):
     try:
         data = await websocket.receive_text()
         try:
-            duration = from_number_to_sec(int(data))
+            duration = from_number_to_sec(data)
         except ValueError:
             await websocket.send_text("error: invalid number")
             await websocket.close()
@@ -71,7 +73,7 @@ async def websocket_progress(websocket: WebSocket):
         await websocket.close()
 
 
-@app.get("/download/{filename}")
+@app.api_route("/download/{filename}", methods=["GET", "HEAD"])
 def download_file(filename: str):
     file_path = CONVERTED_DIR / filename
     if not file_path.exists():
