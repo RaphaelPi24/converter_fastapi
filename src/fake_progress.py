@@ -1,13 +1,13 @@
 import asyncio
 
-
 # Коэффициенты "скорости" обработки в секундах на мегабайт (или килобайт)
 BYTES_IN_MB = 1024 * 1024
 
 # Настраиваемая «скорость» (в секундах) на мегабайт
 DEFAULT_SECONDS_PER_MB = 2.0  # легко подстраивается под реальную обработку
 
-def from_number_to_sec(file_size_bytes: int, speed_per_mb: float = DEFAULT_SECONDS_PER_MB) -> float:
+
+def from_number_to_sec(file_size_bytes: str, speed_per_mb: float = DEFAULT_SECONDS_PER_MB) -> float:
     """
     Преобразует размер файла в байтах в длительность прогресса.
     Чем больше файл — тем дольше идёт прогресс.
@@ -15,6 +15,7 @@ def from_number_to_sec(file_size_bytes: int, speed_per_mb: float = DEFAULT_SECON
     :param speed_per_mb: количество секунд, которые "тратятся" на мегабайт
     :return: длительность в секундах
     """
+    file_size_bytes = int(file_size_bytes)
     size_in_mb = file_size_bytes / BYTES_IN_MB
     return max(1.0, size_in_mb * speed_per_mb)
 
