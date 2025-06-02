@@ -1,36 +1,44 @@
 import shutil
+from contextlib import asynccontextmanager
+from datetime import timedelta
 
 from fastapi import FastAPI, Form, UploadFile, File
 from fastapi import Request, Depends
 from fastapi.responses import FileResponse, HTMLResponse
-from rq import Repeat
+from fastapi_limiter import FastAPILimiter
 from starlette.websockets import WebSocket
 
 from auth.auth_utils import get_current_user
 from auth.routers import router as auth_router
-from config import UPLOAD_DIR, CONVERTED_DIR, TEMPLATES, queue_convertation, queue_file_cleanup
-from convert_code.interface import UniversalInterface
-from convert_code.utils import get_converted_filename, convert_file
+from config import UPLOAD_DIR, CONVERTED_DIR, TEMPLATES, queue_convertation, queue_file_cleanup, aio_redis_conn
+from converters.convertor import Selector
+from converters.utils import get_converted_filename, convert_file
 from fake_progress import async_progress_bar, from_number_to_sec
 from file_cleanup import cleanup_files
 from middleware import LimitUploadSizeMiddleware
 
-# --- Инициализация ---
-app = FastAPI()
-app.add_middleware(LimitUploadSizeMiddleware)
-app.include_router(auth_router)
-
 UPLOAD_DIR.mkdir(exist_ok=True)
 CONVERTED_DIR.mkdir(exist_ok=True)
 
-job = queue_file_cleanup.enqueue(cleanup_files, repeat=Repeat(times=100_000, interval=900))
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await FastAPILimiter.init(aio_redis_conn)
+    yield
+    await FastAPILimiter.close()
+    await aio_redis_conn.close()  # не уверен, может авторизация слетит?
+
+
+app = FastAPI(lifespan=lifespan)
+app.add_middleware(LimitUploadSizeMiddleware)
+app.include_router(auth_router)
 
 
 # --- Роуты ---
 
 @app.get("/", response_class=HTMLResponse)
 async def form(request: Request, current_user: str = Depends(get_current_user)):
-    format_pairs = UniversalInterface.get_all_supported_pairs()
+    format_pairs = Selector.get_all_supported_pairs()
     return TEMPLATES.TemplateResponse("index.html", {
         "request": request,
         "format_pairs": format_pairs,
@@ -43,7 +51,8 @@ async def upload_file(file: UploadFile = File(...), conversion_type: str = Form(
     file_path = UPLOAD_DIR / file.filename
     with file_path.open("wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
-    job = queue_convertation.enqueue(convert_file, str(file_path), file.filename, conversion_type)
+    job = queue_convertation.enqueue(convert_file, str(file_path), file.filename, conversion_type)  # job?
+
     return {
         "filename": file.filename,
         "converted_filename": get_converted_filename(file.filename, conversion_type),
@@ -75,7 +84,15 @@ async def websocket_progress(websocket: WebSocket):
 
 @app.api_route("/download/{filename}", methods=["GET", "HEAD"])
 def download_file(filename: str):
+    """ HEAD - автопроверка наличия файла и если успешно сразу же ставится job2
+        GET - скачивание файла и тоже ставится job2
+    """
     file_path = CONVERTED_DIR / filename
     if not file_path.exists():
         return HTMLResponse(content="Файл не найден", status_code=404)
+    job2 = queue_file_cleanup.enqueue_in(
+        timedelta(seconds=120),
+        cleanup_files,
+        args=(file_path,)
+    )
     return FileResponse(file_path, filename=filename, media_type="application/octet-stream")
