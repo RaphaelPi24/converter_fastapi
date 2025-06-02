@@ -1,25 +1,42 @@
+from pathlib import Path
 import pytest
 
-from convert_code.interface import TextInterface
-
-conversion_format = TextInterface.conversion_format
+from converters.convertor import Text
 from path import INPUT_DIR, OUTPUT_DIR
 
+conversion_formats = Text.conversion_formats
 
-@pytest.mark.parametrize("src_fmt,tgt_fmt", [
-    (src, tgt) for src, targets in conversion_format.items() for tgt in targets.keys()
+
+@pytest.fixture(autouse=True)
+def cleanup_output():
+    """Удаляет выходной файл перед тестом (если он существует)."""
+    def _clean(path: Path):
+        if path.exists():
+            path.unlink()
+    return _clean
+
+
+def skip_if_missing(path: Path):
+    if not path.exists():
+        pytest.skip(f"Пропущен: отсутствует входной файл {path.name}")
+
+
+@pytest.mark.parametrize("source_format,target_format", [
+    (src, tgt) for src, targets in conversion_formats.items() for tgt in targets
 ])
-def test_text_conversion(src_fmt, tgt_fmt):
-    input_file = INPUT_DIR / f"example.{src_fmt}"
-    output_file = OUTPUT_DIR / f"{src_fmt}_{tgt_fmt}.{tgt_fmt}"
+def test_text_conversion(source_format, target_format, cleanup_output):
+    input_file = INPUT_DIR / f"example.{source_format}"
+    output_file = OUTPUT_DIR / f"{source_format}_to_{target_format}.{target_format}"
 
-    interface = TextInterface(
-        source_format=src_fmt,
-        target_format=tgt_fmt,
-        input_data=input_file,
+    skip_if_missing(input_file)
+    cleanup_output(output_file)
+
+    interface = Text()
+    interface.convert(
+        source_format=source_format,
+        target_format=target_format,
+        input_path=input_file,
         output_path=output_file
     )
 
-    result = interface.run()
-    assert result is True
     assert output_file.exists()
