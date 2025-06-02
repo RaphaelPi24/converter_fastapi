@@ -3,7 +3,7 @@ FROM python:3.12
 RUN apt-get update && apt-get -y upgrade \
     && apt-get install -y \
     libcairo2-dev pkg-config python3-dev ffmpeg
-    #&& apt-get clean && rm -rf /var/lib/apt/lists/*
+
 
 WORKDIR /app
 

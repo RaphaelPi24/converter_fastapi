@@ -7,7 +7,7 @@ services:
     ports:
       - "80:80"
     volumes:
-      - ../src/static:/app/static
+      #- ../src/static/:/app/static
       - ./nginx:/etc/nginx/conf.d
     depends_on:
       - fastapi
@@ -18,6 +18,7 @@ services:
     build:
       context: ..
       dockerfile: build/backend/Dockerfile
+    env_file: .env.production
     environment:
       - PYTHONPATH=/app
 
@@ -44,23 +45,24 @@ services:
     build:
       context: ..
       dockerfile: build/backend/Dockerfile
+    env_file: .env.production
     depends_on:
       - redis
     command: >
-      rq worker --url redis://redis:6379 converting
-      rq worker --url redis://redis:6379 converting
-      rq worker --url redis://redis:6379 converting
-      rq worker --url redis://redis:6379 --with-scheduler regular_tasks
+      sh -c "
+        rq worker --url redis://${REDIS_HOST}:${REDIS_PORT} converting &
+        rq worker --url redis://${REDIS_HOST}:${REDIS_PORT} converting &
+        rq worker --url redis://${REDIS_HOST}:${REDIS_PORT} converting &
+        rq worker --url redis://${REDIS_HOST}:${REDIS_PORT} --with-scheduler regular_tasks
+      "
     volumes:
       - ../converted_files:/app/converted_files
       - ../uploaded_files:/app/uploaded_files
-    environment:
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
 
 
   redis:
     image: redis:latest
+    env_file: .env.production
     volumes:
       - redis_data:/data
 
