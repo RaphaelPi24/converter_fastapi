@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Требуется авторизация</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: #343a40;
+        }
+        .auth-container {
+            text-align: center;
+            background: white;
+            padding: 2.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            max-width: 450px;
+            width: 90%;
+        }
+        .auth-icon {
+            font-size: 3.5rem;
+            color: #dc3545;
+            margin-bottom: 1.5rem;
+        }
+        .auth-title {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+        .auth-message {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        .auth-btn {
+            display: inline-block;
+            padding: 0.8rem 1.8rem;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+        }
+        .auth-btn:hover {
+            background-color: #0069d9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.25);
+        }
+        .auth-footer {
+            margin-top: 2rem;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-icon">🔒</div>
+        <h1 class="auth-title">Требуется авторизация</h1>
+        <p class="auth-message">
+            Для доступа к этой странице необходимо войти в систему.
+            Пожалуйста, авторизуйтесь, чтобы продолжить.
+        </p>
+        <a href="/login/" class="auth-btn">Перейти к авторизации</a>
+        <div class="auth-footer">
+            Нет аккаунта? <a href="/register/" style="color: #007bff;">Зарегистрируйтесь</a>
+        </div>
+    </div>
+</body>
+</html>
