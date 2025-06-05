@@ -1,4 +1,3 @@
-# validate.py
 from pydantic import BaseModel, EmailStr
 
 
