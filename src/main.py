@@ -6,6 +6,7 @@ from fastapi import FastAPI, Form, UploadFile, File
 from fastapi import Request, Depends
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi_limiter import FastAPILimiter
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.websockets import WebSocket
 
 from auth.auth_utils import get_current_user
@@ -26,7 +27,7 @@ async def lifespan(app: FastAPI):
     await FastAPILimiter.init(aio_redis_conn)
     yield
     await FastAPILimiter.close()
-    await aio_redis_conn.close()  # не уверен, может авторизация слетит?
+    await aio_redis_conn.close()
 
 
 app = FastAPI(lifespan=lifespan)
@@ -35,6 +36,14 @@ app.include_router(auth_router)
 
 
 # --- Роуты ---
+@app.exception_handler(StarletteHTTPException)
+async def custom_http_exception_handler(request: Request, exc: StarletteHTTPException):
+    if exc.status_code == 401:
+        if "expired" in str(exc.detail).lower():
+            return TEMPLATES.TemplateResponse("expired_token.html", {"request": request}, status_code=401)
+        return TEMPLATES.TemplateResponse("not_authenticated.html", {"request": request}, status_code=401)
+    return HTMLResponse(f"{exc.status_code} - {exc.detail}", status_code=exc.status_code)
+
 
 @app.get("/", response_class=HTMLResponse)
 async def form(request: Request, current_user: str = Depends(get_current_user)):
@@ -51,7 +60,18 @@ async def upload_file(file: UploadFile = File(...), conversion_type: str = Form(
     file_path = UPLOAD_DIR / file.filename
     with file_path.open("wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
+    new_name = get_converted_filename(file.filename, conversion_type)
     job = queue_convertation.enqueue(convert_file, str(file_path), file.filename, conversion_type)  # job?
+    job2 = queue_file_cleanup.enqueue_in(
+        timedelta(seconds=300),
+        cleanup_files,
+        args=(file_path,)
+    )
+    job3 = queue_file_cleanup.enqueue_in(
+        timedelta(seconds=200),
+        cleanup_files,
+        args=(file_path,) # путь + имя
+    )
 
     return {
         "filename": file.filename,
@@ -85,14 +105,11 @@ async def websocket_progress(websocket: WebSocket):
 @app.api_route("/download/{filename}", methods=["GET", "HEAD"])
 def download_file(filename: str):
     """ HEAD - автопроверка наличия файла и если успешно сразу же ставится job2
+    БОЛЬШИЙ ТАЙМАУТ ПРИ HEAD
         GET - скачивание файла и тоже ставится job2
     """
     file_path = CONVERTED_DIR / filename
     if not file_path.exists():
         return HTMLResponse(content="Файл не найден", status_code=404)
-    job2 = queue_file_cleanup.enqueue_in(
-        timedelta(seconds=120),
-        cleanup_files,
-        args=(file_path,)
-    )
+
     return FileResponse(file_path, filename=filename, media_type="application/octet-stream")
