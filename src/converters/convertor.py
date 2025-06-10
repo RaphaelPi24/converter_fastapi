@@ -9,7 +9,7 @@ from pathlib import Path
 import cairosvg
 import fitz  # PyMuPDF
 import svgwrite
-from PIL import Image
+from PIL import Image as PilImage
 from docx import Document
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
@@ -25,6 +25,8 @@ class Base:
     def convert(self, source_format, target_format, input_path, output_path):
         method_name = f'{source_format}_to_{target_format}'
         method = getattr(self.__class__, method_name, None)
+        if method is None:
+            raise ValueError('Unknown format: {source_format}')
         return method(input_path, output_path)
 
     def __init_subclass__(cls, **kwargs):
@@ -37,6 +39,12 @@ class Base:
                 if getattr(cls, method_name) is None:
                     raise AttributeError('Не задан метод для конвертации {source} => {targets}')
 
+    def check(self, source_format, target_format):
+        try:
+            return target_format in self.conversion_formats[source_format]
+        except KeyError:
+            return False
+
 
 class Image(Base):
     conversion_formats = {
@@ -48,23 +56,23 @@ class Image(Base):
 
     @staticmethod
     def jpg_to_webp(input_path: Path, output_path: Path):
-        with Image.open(input_path) as img:
+        with PilImage.open(input_path) as img:
             img.save(output_path, "WEBP")
 
     @staticmethod
     def png_to_webp(input_path: Path, output_path: Path):
-        with Image.open(input_path) as img:
+        with PilImage.open(input_path) as img:
             img.save(output_path, "WEBP")
 
     @staticmethod
     def webp_to_png(input_path: Path, output_path: Path):
-        with Image.open(input_path) as img:
+        with PilImage.open(input_path) as img:
             img = img.convert("RGB")
             img.save(output_path, "PNG")
 
     @staticmethod
     def webp_to_jpg(input_path: Path, output_path: Path):
-        with Image.open(input_path) as img:
+        with PilImage.open(input_path) as img:
             img = img.convert("RGB")
             img.save(output_path, "JPEG")
 
@@ -74,7 +82,7 @@ class Image(Base):
 
     @staticmethod
     def raster_to_svg(input_path: Path, output_path: Path, threshold: int = 128):
-        img = Image.open(input_path).convert("L")  # Grayscale
+        img = PilImage.open(input_path).convert("L")  # Grayscale
         width, height = img.size
         pixels = img.load()
 
@@ -267,7 +275,7 @@ class Archive(Base):
             tar.extractall(path=output_path)
 
 
-class Selector:  # Selector
+class Selector:
     INTERFACES = [Text, Video, Image, Archive]
 
     def __init__(self, source_format: str, target_format: str, input_path: Path, output_path: Path):
@@ -275,22 +283,17 @@ class Selector:  # Selector
         self.target_format = target_format
         self.input_path = input_path
         self.output_path = output_path
-        self.interface = self.resolve_interface()
+        self.interface = self.select_converter()
 
-    def resolve_interface(self):
-        method_name = f'{self.source_format}_to_{self.target_format}'
+    def select_converter(self):
         for iface_cls in self.INTERFACES:
-            if (
-                    self.source_format in iface_cls.conversion_formats
-                    and self.target_format in iface_cls.conversion_formats[self.source_format]
-                    and hasattr(iface_cls, method_name)
-            ):
-                return iface_cls()
+            if iface_cls().check(self.source_format, self.target_format):
+                return iface_cls
         raise ValueError(
             f"Формат '{self.source_format}' → '{self.target_format}' не поддерживается ни одним конвертором.")
 
     def run(self) -> bool:
-        return self.interface.convert(self.source_format, self.target_format, self.input_path, self.output_path)
+        return self.interface().convert(self.source_format, self.target_format, self.input_path, self.output_path)
 
     @classmethod
     def get_all_supported_pairs(cls):
