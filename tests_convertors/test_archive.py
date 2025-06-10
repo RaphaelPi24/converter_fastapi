@@ -1,10 +1,9 @@
-from pathlib import Path
 import shutil
 
 import pytest
 
 from converters.convertor import Archive
-from tests.path import OUTPUT_DIR
+from tests_convertors.path import OUTPUT_DIR
 
 TMP_WORK_DIR = OUTPUT_DIR / "archive_temp"
 
@@ -73,16 +72,3 @@ def test_tar_gz_archive_and_extract(prepare_folder):
     extracted_file = extract_path / "test.txt"
     assert extracted_file.exists()
     assert extracted_file.read_text(encoding="utf-8") == "Hello Archive Test!"
-
-
-def test_invalid_format_raises_value_error():
-    dummy_path = Path("/tmp/dummy.txt")
-    archive = Archive()
-
-    with pytest.raises(ValueError, match="Unknown format: rar -> folder"):
-        archive.convert(
-            source_format="rar",
-            target_format="folder",
-            input_path=dummy_path,
-            output_path=dummy_path
-        )

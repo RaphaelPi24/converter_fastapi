@@ -1,24 +1,9 @@
-from pathlib import Path
 import pytest
 
 from converters.convertor import Image
-from path import INPUT_DIR, OUTPUT_DIR
+from path import INPUT_DIR, OUTPUT_DIR, skip_if_missing, cleanup_output
 
 conversion_formats = Image.conversion_formats
-
-
-@pytest.fixture(autouse=True)
-def cleanup_output():
-    """Удаляет выходной файл перед тестом (если он существует)."""
-    def _clean(path: Path):
-        if path.exists():
-            path.unlink()
-    return _clean
-
-
-def skip_if_missing(path: Path):
-    if not path.exists():
-        pytest.skip(f"Пропущен: отсутствует входной файл {path.name}")
 
 
 @pytest.mark.parametrize("source_format,target_format", [
