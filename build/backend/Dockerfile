@@ -13,7 +13,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY --chmod=775 build/backend/entrypoint.dev.sh /entrypoint.sh
 COPY ./src .
 COPY build/.env.production .env
-COPY ./tests /app/tests
+COPY ./tests_convertors /app/tests_convertors
 
 EXPOSE 8000
 CMD ["/entrypoint.sh"]
