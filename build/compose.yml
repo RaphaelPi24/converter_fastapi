@@ -1,19 +1,6 @@
 name: converter_fa
 
 services:
-  nginx:
-    image: nginx:latest
-    restart: always
-    ports:
-      - "80:80"
-    volumes:
-      #- ../src/static/:/app/static
-      - ./nginx:/etc/nginx/conf.d
-    depends_on:
-      - fastapi
-
-
-
   fastapi:
     build:
       context: ..
