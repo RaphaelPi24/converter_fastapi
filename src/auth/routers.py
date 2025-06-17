@@ -3,19 +3,18 @@ from uuid import uuid4
 from fastapi import APIRouter, Depends, HTTPException, Form, Request
 from fastapi.responses import HTMLResponse
 from fastapi.responses import RedirectResponse
-from fastapi.templating import Jinja2Templates
+from fastapi_limiter.depends import RateLimiter
 from sqlalchemy.orm import Session
 
 from auth.database import SessionLocal
 from auth.model import User
 from auth.security import hash_password, verify_password
-from auth.session_redis import store_token, get_username_from_token, delete_token
-from auth.validate import UserCreate, UserOut
-from config import TEMPLATES
+from auth.session_redis import TokenManager
+from config import TEMPLATES, MAX_AGE_COOKIE
+
 router = APIRouter()
 
 
-# --- Зависимость ---
 def get_db():
     db = SessionLocal()
     try:
@@ -24,73 +23,54 @@ def get_db():
         db.close()
 
 
-@router.get("/login", response_class=HTMLResponse)
-def show_login(request: Request):
+@router.get("/login/", response_class=HTMLResponse)
+async def show_login(request: Request):
     return TEMPLATES.TemplateResponse("login.html", {"request": request})
 
 
-# --- Регистрация ---
-@router.post("/register", response_model=UserOut)
-def register(user_in: UserCreate, db: Session = Depends(get_db)):
-    existing_user = db.query(User).filter(
-        (User.username == user_in.username) | (User.email == user_in.email)
-    ).first()
-
-    if existing_user:
-        raise HTTPException(status_code=400, detail="Пользователь уже существует")
-
-    hashed_pw = hash_password(user_in.password)
-    user = User(username=user_in.username, email=user_in.email, hashed_password=hashed_pw)
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-    return user
-
-
-# --- Вход ---
-@router.post("/login/")
-def login(username: str = Form(...), password: str = Form(...), db: Session = Depends(get_db)):
+@router.post("/login/", dependencies=[Depends(RateLimiter(times=3, minutes=1))])
+async def login(username: str = Form(...), password: str = Form(...), db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == username).first()
 
     if not user or not verify_password(password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Неверные учётные данные")
 
-    token = str(uuid4())
-    store_token(token, user.username)
+    clear_token = str(uuid4())
+    token = TokenManager(clear_token)
+    token.store_token(user.username)  # создание и установка
 
     response = RedirectResponse(url="/", status_code=302)
-    response.set_cookie(key="auth_token", value=token, httponly=True)
+    response.set_cookie(
+        key="auth_token",
+        value=clear_token,  # мб ошибка
+        httponly=True,  # no js, защита от XSS
+        secure=False,  # пока False, потом True
+        samesite="lax",  # от CSRF
+        max_age=MAX_AGE_COOKIE
+    )
     return response
 
 
 # --- Выход ---
 @router.get("/logout/")
-def logout(request: Request):
+async def logout(request: Request):
     token = request.cookies.get("auth_token")
     if token:
-        delete_token(token)
+        token = TokenManager(token)
+        token.delete_token()
+
     response = RedirectResponse(url="/", status_code=302)
     response.delete_cookie("auth_token")
     return response
 
 
-# --- Пример защищённой страницы ---
-@router.get("/secure/")
-def secure_page(request: Request):
-    token = request.cookies.get("auth_token")
-    username = get_username_from_token(token) if token else None
-    if not username:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    return {"msg": f"Добро пожаловать, {username}!"}
-
-
-@router.get("/register", response_class=HTMLResponse)
-def register_form(request: Request):
+@router.get("/register/", response_class=HTMLResponse)
+async def register_form(request: Request):
     return TEMPLATES.TemplateResponse("register.html", {"request": request})
 
 
-@router.post("/register/")
-def register_user(
+@router.post("/register/", dependencies=[Depends(RateLimiter(times=3, minutes=1))])
+async def register_user(
         request: Request,
         username: str = Form(...),
         email: str = Form(...),

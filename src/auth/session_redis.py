@@ -1,17 +1,18 @@
-# session_redis.py
-
-from config import redis_conn
-
-SESSION_EXPIRATION = 3600  # 1 час
+from config import redis_conn, SESSION_EXPIRATION
 
 
-def store_token(token: str, username: str):
-    redis_conn.setex(f"session:{token}", SESSION_EXPIRATION, username)
+class TokenManager:
+    def __init__(self, token: str):
+        self.token = self.get_key(token)
 
+    def get_key(self, token: str) -> str:
+        return f'session:{token}'
 
-def get_username_from_token(token: str) -> str | None:
-    return redis_conn.get(f"session:{token}")
+    def store_token(self, username: str) -> None:
+        redis_conn.setex(self.token, SESSION_EXPIRATION, username)
 
+    def get_username_from_token(self) -> bytes | None:
+        return redis_conn.get(self.token)
 
-def delete_token(token: str):
-    redis_conn.delete(f"session:{token}")
+    def delete_token(self) -> None:
+        redis_conn.delete(self.token)
