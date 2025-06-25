@@ -30,6 +30,7 @@ async def lifespan(app: FastAPI):
     await aio_redis_conn.close()
 
 
+
 app = FastAPI(lifespan=lifespan)
 app.add_middleware(LimitUploadSizeMiddleware)
 app.include_router(auth_router)
