@@ -1,9 +1,8 @@
-FROM python:3.12
+FROM python:3.12-slim
 
 RUN apt-get update && apt-get -y upgrade \
     && apt-get install -y \
     libcairo2-dev pkg-config python3-dev ffmpeg
-
 
 WORKDIR /app
 

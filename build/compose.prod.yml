@@ -6,6 +6,8 @@ services:
     networks:
       converter_nginx:
         ipv4_address: 10.6.6.7
+    ports:
+      - "8000:8000"
 
   worker:
     build:
