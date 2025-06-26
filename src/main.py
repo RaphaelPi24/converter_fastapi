@@ -36,6 +36,7 @@ app.add_middleware(LimitUploadSizeMiddleware)
 app.include_router(auth_router)
 
 
+
 # --- Роуты ---
 @app.exception_handler(StarletteHTTPException)
 async def custom_http_exception_handler(request: Request, exc: StarletteHTTPException):
