@@ -61,14 +61,14 @@ async def upload_file(file: UploadFile = File(...), conversion_type: str = Form(
     file_path = UPLOAD_DIR / file.filename
     with file_path.open("wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
-    new_name = get_converted_filename(file.filename, conversion_type)
-    job = queue_convertation.enqueue(convert_file, str(file_path), file.filename, conversion_type)  # job?
-    job2 = queue_file_cleanup.enqueue_in(
+
+    queue_convertation.enqueue(convert_file, str(file_path), file.filename, conversion_type)
+    queue_file_cleanup.enqueue_in(
         timedelta(seconds=300),
         cleanup_files,
         args=(file_path,)
     )
-    job3 = queue_file_cleanup.enqueue_in(
+    queue_file_cleanup.enqueue_in(
         timedelta(seconds=200),
         cleanup_files,
         args=(file_path,) # путь + имя
@@ -105,9 +105,9 @@ async def websocket_progress(websocket: WebSocket):
 
 @app.api_route("/download/{filename}", methods=["GET", "HEAD"])
 def download_file(filename: str):
-    """ HEAD - автопроверка наличия файла и если успешно сразу же ставится job2
-    БОЛЬШИЙ ТАЙМАУТ ПРИ HEAD
-        GET - скачивание файла и тоже ставится job2
+    """
+        HEAD - автопроверка наличия файла
+        GET - скачивание файла
     """
     file_path = CONVERTED_DIR / filename
     if not file_path.exists():

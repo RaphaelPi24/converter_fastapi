@@ -9,8 +9,8 @@ from sqlalchemy.orm import Session
 from auth.database import SessionLocal
 from auth.model import User
 from auth.security import hash_password, verify_password
-from auth.session_redis import TokenManager
-from config import TEMPLATES, MAX_AGE_COOKIE
+from auth.session_redis import delete_token, store_token
+from config import TEMPLATES
 
 router = APIRouter()
 
@@ -35,16 +35,15 @@ async def login(username: str = Form(...), password: str = Form(...), db: Sessio
     if not user or not verify_password(password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Неверные учётные данные")
 
-    clear_token = str(uuid4())
-    token = TokenManager(clear_token)
-    token.store_token(user.username)  # создание и установка
+    token = str(uuid4())
+    store_token(token, user.username)
 
     response = RedirectResponse(url="/", status_code=302)
     response.set_cookie(
         key="auth_token",
-        value=clear_token,  # мб ошибка
+        value=clear_token,
         httponly=True,  # no js, защита от XSS
-        secure=False,  # пока False, потом True
+        secure=True,  # пока False, потом True
         samesite="lax",  # от CSRF
         max_age=MAX_AGE_COOKIE
     )
@@ -56,9 +55,7 @@ async def login(username: str = Form(...), password: str = Form(...), db: Sessio
 async def logout(request: Request):
     token = request.cookies.get("auth_token")
     if token:
-        token = TokenManager(token)
-        token.delete_token()
-
+        delete_token(token)
     response = RedirectResponse(url="/", status_code=302)
     response.delete_cookie("auth_token")
     return response
