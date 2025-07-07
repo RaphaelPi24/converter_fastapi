@@ -41,11 +41,10 @@ async def login(username: str = Form(...), password: str = Form(...), db: Sessio
     response = RedirectResponse(url="/", status_code=302)
     response.set_cookie(
         key="auth_token",
-        value=clear_token,
+        value=token,
         httponly=True,  # no js, защита от XSS
         secure=True,  # пока False, потом True
         samesite="lax",  # от CSRF
-        max_age=MAX_AGE_COOKIE
     )
     return response
 
