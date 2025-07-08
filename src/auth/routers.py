@@ -36,7 +36,7 @@ async def login(username: str = Form(...), password: str = Form(...), db: Sessio
         raise HTTPException(status_code=401, detail="Неверные учётные данные")
 
     token = str(uuid4())
-    store_token(token, user.username)
+    await store_token(token, user.username)
 
     response = RedirectResponse(url="/", status_code=302)
     response.set_cookie(
