@@ -1,11 +1,12 @@
-from config import aio_redis_conn, SESSION_EXPIRATION
+from config import SESSION_EXPIRATION
+from infrastructure.redis.config import aio_redis_conn
 
 
 async def store_token(token: str, username: str):
     await aio_redis_conn.setex(f"session:{token}", SESSION_EXPIRATION, username)
 
 
-async def get_username_from_token(token: str) -> str | None:
+async def get_username_from_token(token: str) -> bytes | None:
     return await aio_redis_conn.get(f"session:{token}")
 
 

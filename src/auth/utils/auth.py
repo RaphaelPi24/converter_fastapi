@@ -1,6 +1,6 @@
 from fastapi import Request, HTTPException
 
-from auth.session_redis import get_username_from_token, store_token
+from auth.utils.session_redis import get_username_from_token, store_token
 
 
 async def get_current_user(request: Request) -> str:

@@ -9,13 +9,14 @@ from fastapi_limiter import FastAPILimiter
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.websockets import WebSocket
 
-from auth.auth_utils import get_current_user
 from auth.routers import router as auth_router
-from config import UPLOAD_DIR, CONVERTED_DIR, TEMPLATES, queue_convertation, queue_file_cleanup, aio_redis_conn
+from auth.utils.auth import get_current_user
+from config import UPLOAD_DIR, CONVERTED_DIR, TEMPLATES
 from converters.convertor import Selector
 from converters.utils import get_converted_filename, convert_file
 from fake_progress import async_progress_bar, from_number_to_sec
 from file_cleanup import cleanup_files
+from infrastructure.redis.config import queue_convertation, queue_file_cleanup, aio_redis_conn
 from middleware import LimitUploadSizeMiddleware
 
 UPLOAD_DIR.mkdir(exist_ok=True)
@@ -28,7 +29,6 @@ async def lifespan(app: FastAPI):
     yield
     await FastAPILimiter.close()
     await aio_redis_conn.close()
-
 
 
 app = FastAPI(lifespan=lifespan)
@@ -71,7 +71,7 @@ async def upload_file(file: UploadFile = File(...), conversion_type: str = Form(
     queue_file_cleanup.enqueue_in(
         timedelta(seconds=200),
         cleanup_files,
-        args=(file_path,) # путь + имя
+        args=(file_path,)  # путь + имя
     )
 
     return {

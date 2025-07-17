@@ -6,10 +6,10 @@ from fastapi.responses import RedirectResponse
 from fastapi_limiter.depends import RateLimiter
 from sqlalchemy.orm import Session
 
-from auth.database import SessionLocal
+from infrastructure.db.database import SessionLocal
 from auth.model import User
-from auth.security import hash_password, verify_password
-from auth.session_redis import delete_token, store_token
+from auth.utils.security import hash_password, verify_password
+from auth.utils.session_redis import delete_token, store_token
 from config import TEMPLATES
 
 router = APIRouter()
