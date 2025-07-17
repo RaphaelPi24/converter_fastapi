@@ -13,7 +13,6 @@ queue_convertation = Queue("converting", connection=redis_conn)
 queue_file_cleanup = Queue("regular_tasks", connection=redis_conn)
 aio_redis_conn = AsyncRedis.from_url(f"redis://{REDIS_HOST}:{REDIS_PORT}")
 
-
 POSTGRES_USER = os.getenv("POSTGRES_USER")
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 POSTGRES_PORT = os.getenv("POSTGRES_PORT")
