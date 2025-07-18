@@ -1,2 +1,2 @@
-docker compose -f ../build/compose.yml -f ../build/compose.prod.yml down --remove-orphans
-docker-compose -f ../build/compose.yml -f ../build/compose.prod.yml up --build --no-cache
+docker compose --env-file ../build/.env.production -f ../build/compose.yml -f ../build/compose.prod.yml down --remove-orphans
+docker compose --env-file ../build/.env.production -f ../build/compose.yml -f ../build/compose.prod.yml up --build --no-cache
