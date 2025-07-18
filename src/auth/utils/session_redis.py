@@ -12,3 +12,6 @@ async def get_username_from_token(token: str) -> bytes | None:
 
 async def delete_token(token: str):
     await aio_redis_conn.delete(f"session:{token}")
+
+
+
