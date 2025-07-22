@@ -54,7 +54,7 @@ async def login(username: str = Form(...), password: str = Form(...), db: Sessio
 async def logout(request: Request):
     token = request.cookies.get("auth_token")
     if token:
-        delete_token(token)
+        await delete_token(token)
     response = RedirectResponse(url="/", status_code=302)
     response.delete_cookie("auth_token")
     return response

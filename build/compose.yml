@@ -14,8 +14,6 @@ services:
       - converter_db
       - redis
       - worker
-    ports:
-      - "8000:8000"
     volumes:
       - ../converted_files:/app/converted_files
       - ../uploaded_files:/app/uploaded_files
@@ -45,7 +43,6 @@ services:
     volumes:
       - ../converted_files:/app/converted_files
       - ../uploaded_files:/app/uploaded_files
-
 
   redis:
     image: redis:latest
