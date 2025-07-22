@@ -81,7 +81,7 @@ async def upload_file(file: UploadFile = File(...), conversion_type: str = Form(
     }
 
 
-@app.websocket("/ws/progress")
+@app.websocket("/wss/progress")
 async def websocket_progress(websocket: WebSocket):
     await websocket.accept()
     try:

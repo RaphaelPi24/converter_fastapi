@@ -114,7 +114,7 @@
             const result = await response.json();
             const convertedFilename = result.converted_filename;
 
-            const ws = new WebSocket(`ws://${location.host}/ws/progress`);
+            const ws = new WebSocket(`wss://${location.host}/wss/progress`);
             ws.onopen = () => ws.send(String(file.size));
 
             ws.onmessage = async (event) => {
