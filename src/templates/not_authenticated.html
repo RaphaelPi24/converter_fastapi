@@ -7,13 +7,14 @@
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f8f9fa;
+            background: linear-gradient(135deg, #f8f9fa 70%, #e9ecef 100%);
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             margin: 0;
             color: #343a40;
+            overflow: hidden;
         }
         .auth-container {
             text-align: center;
@@ -23,6 +24,8 @@
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
             max-width: 450px;
             width: 90%;
+            z-index: 10;
+            position: relative;
         }
         .auth-icon {
             font-size: 3.5rem;
@@ -62,6 +65,22 @@
             font-size: 0.9rem;
             color: #6c757d;
         }
+
+        /* Дополнительный фон-промо блок */
+        .project-info {
+            position: absolute;
+            bottom: 5%;
+            left: 50%;
+            transform: translateX(-50%);
+            max-width: 90%;
+            text-align: center;
+            font-size: 0.95rem;
+            color: #495057;
+            opacity: 0.85;
+        }
+        .project-info strong {
+            color: #007bff;
+        }
     </style>
 </head>
 <body>
@@ -76,6 +95,14 @@
         <div class="auth-footer">
             Нет аккаунта? <a href="/register/" style="color: #007bff;">Зарегистрируйтесь</a>
         </div>
+    </div>
+
+    <div class="project-info">
+        🚀 <strong>Converter FastAPI</strong> — pet-project уровня production.<br>
+        Поддерживает <strong>конвертацию файлов</strong> (тексты, изображения, видео, архивы),<br>
+        очереди через <strong>Redis + RQ</strong>, <strong>WebSocket-прогресс</strong>,<br>
+        <strong>авторизацию и регистрацию</strong> на базе PostgreSQL и Redis.<br>
+        🐳 Полностью развёрнут в Docker + Nginx.
     </div>
 </body>
 </html>

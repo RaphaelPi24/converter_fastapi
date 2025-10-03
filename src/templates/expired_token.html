@@ -1,57 +1,75 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Токен истёк</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .container {
-            text-align: center;
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            max-width: 500px;
-            width: 90%;
-        }
-        .btn {
-            display: inline-block;
-            margin-top: 20px;
-            padding: 12px 24px;
-            background-color: #4CAF50;
-            color: white;
-            text-decoration: none;
-            border-radius: 4px;
-            transition: all 0.3s;
-            font-weight: bold;
-        }
-        .btn:hover {
-            background-color: #45a049;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        .icon {
-            font-size: 50px;
-            color: #f44336;
-            margin-bottom: 20px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Токен истёк</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: #343a40;
+    }
+    .container {
+      background: #fff;
+      padding: 2.5rem;
+      border-radius: 12px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+      max-width: 450px;
+      width: 90%;
+      text-align: center;
+      animation: fadeIn 0.7s ease-in-out;
+    }
+    .icon {
+      font-size: 3rem;
+      color: #dc3545;
+      margin-bottom: 1.2rem;
+    }
+    h2 {
+      margin-bottom: 1rem;
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: #212529;
+    }
+    p {
+      font-size: 1rem;
+      line-height: 1.6;
+      margin-bottom: 2rem;
+      color: #495057;
+    }
+    .btn {
+      display: inline-block;
+      padding: 0.9rem 1.8rem;
+      background-color: #007bff;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 500;
+      transition: background-color 0.3s, transform 0.2s;
+    }
+    .btn:hover {
+      background-color: #0069d9;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 123, 255, 0.25);
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="icon">⚠️</div>
-        <h2>Сессия истекла</h2>
-        <p>Ваш токен авторизации больше не действителен. Пожалуйста, войдите снова для продолжения работы.</p>
-        <a href="/login/" class="btn">Войти снова</a>
-    </div>
+  <div class="container">
+    <div class="icon">⚠️</div>
+    <h2>Сессия истекла</h2>
+    <p>Ваш токен авторизации больше не действителен.<br>Пожалуйста, войдите снова для продолжения работы.</p>
+    <a href="/login/" class="btn">Войти снова</a>
+  </div>
 </body>
 </html>

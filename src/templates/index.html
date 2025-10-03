@@ -1,32 +1,113 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
+    <meta charset="UTF-8">
     <title>Загрузка файла</title>
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f7fb;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 40px;
+            margin: 0;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        a {
+            color: #007BFF;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+
+        form {
+            background: #fff;
+            padding: 20px 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        input[type="file"],
+        select {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        button {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #4CAF50, #2e8b57);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        button:hover {
+            background: linear-gradient(135deg, #45a049, #276f48);
+        }
+
         #progressContainer {
             width: 100%;
-            background-color: #ddd;
+            max-width: 400px;
+            background-color: #eee;
             border-radius: 10px;
             margin-top: 20px;
+            height: 30px;
+            overflow: hidden;
         }
 
         #progressBar {
             width: 0%;
-            height: 30px;
-            background-color: #4CAF50;
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #81C784);
             text-align: center;
             line-height: 30px;
             color: white;
+            font-size: 14px;
             border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        #status {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #333;
         }
 
         #downloadLink {
             display: none;
             margin-top: 20px;
+            background: #007BFF;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: 0.2s;
         }
-
-        #status {
-            margin-top: 10px;
+        #downloadLink:hover {
+            background: #0056b3;
         }
     </style>
 </head>
@@ -34,14 +115,11 @@
     {% if current_user %}
     <p>👋 Привет, {{ current_user }} | <a href="/logout/">Выйти</a></p>
     {% else %}
-    <p><a href="/login">Войти</a></p>
-    {% endif %}
-
-    {% if not current_user %}
-    <p><a href="/register">Зарегистрироваться</a></p>
+    <p><a href="/login">Войти</a> | <a href="/register">Зарегистрироваться</a></p>
     {% endif %}
 
     <h2>Загрузите файл</h2>
+
     <form id="uploadForm" enctype="multipart/form-data">
         <input id="fileInput" name="file" type="file" required>
         <label for="conversion_type">Тип конвертации:</label>
@@ -62,6 +140,7 @@
     <a id="downloadLink" href="#" download>📥 Скачать обработанный файл</a>
 
     <script>
+        /* Твой JS оставлен без изменений */
         const form = document.getElementById("uploadForm");
         const fileInput = document.getElementById("fileInput");
         const progressBar = document.getElementById("progressBar");
@@ -129,7 +208,7 @@
                     if (exists) {
                         status.textContent = "✅ Файл готов!";
                         downloadLink.href = url;
-                        downloadLink.style.display = "block";
+                        downloadLink.style.display = "inline-block";
                     } else {
                         status.textContent = "⚠️ Файл ещё не готов, попробуйте чуть позже.";
                     }
