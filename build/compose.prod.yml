@@ -6,6 +6,7 @@ services:
     networks:
       converter_nginx:
         ipv4_address: 10.6.6.7
+    restart: on-failure
 
 
   worker:
@@ -15,16 +16,19 @@ services:
     networks:
       converter_nginx:
         ipv4_address: 10.6.6.2
+    restart: on-failure
 
   converter_db:
     networks:
       converter_nginx:
         ipv4_address: 10.6.6.3
+    restart: on-failure
 
   redis:
     networks:
       converter_nginx:
         ipv4_address: 10.6.6.4
+    restart: on-failure
 
 networks:
   converter_nginx:

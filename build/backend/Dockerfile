@@ -7,7 +7,7 @@ RUN apt-get update && apt-get -y upgrade \
 WORKDIR /app
 
 COPY ./src/requirements.txt requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install -r requirements.txt
 
 COPY --chmod=775 build/backend/entrypoint.dev.sh /entrypoint.sh
 COPY ./src .

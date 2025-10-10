@@ -1,5 +1,7 @@
 services:
   fastapi:
+    ports:
+      - "8003:8000"
     develop:
       watch:
         - action: sync+restart
@@ -12,6 +14,7 @@ services:
             #- requirements.txt
         - action: rebuild
           path: ../src/requirements.txt
+
   converter_db:
     ports:
       - "5433:5432" # хост контейнер
